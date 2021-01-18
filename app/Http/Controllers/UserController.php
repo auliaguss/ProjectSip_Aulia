@@ -5,13 +5,38 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use \Illuminate\Support\Facades\DB;
 use App\User;
-use App\Role;
+// use App\Role;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return User::all();
+        $data = User::orderBy('id', 'DESC')->paginate(5);
+        return view('users.index', compact('data'))
+            ->with('i', ($request->input('page', 1) - 1) * 5);
+    }
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        $user = User::find(2);
+        return view('users.show', compact('user'));
+    }
+
+    // public function index()
+    // {
+    //     return User::all();
+    // }
+
+    public function create()
+    {
+        $roles = Role::pluck('name', 'name')->all();
+        return view('users.create', compact('roles'));
     }
 
     public function cekRole($id)

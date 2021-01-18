@@ -24,7 +24,19 @@ Route::get('/home', 'HomeController@index')->name('home');
 Route::group(['middleware' => ['auth']], function () {
     Route::resource('roles', 'RoleController');
     Route::resource('users', 'UserController');
-    Route::resource('products', 'ProductController');
+    Route::resource('crimes', 'CrimeController');
 });
 
+Route::post('image-upload', 'CrimeController@imageUploadPost')->name('image.upload.post');
+
 Auth::routes();
+
+
+Route::get('ajaxdata', 'AjaxdataController@index')->name('ajaxdata');
+Route::get('ajaxdata/getdata', 'AjaxdataController@getdata')->name('ajaxdata.getdata');
+
+Route::post('ajaxdata/postdata', 'AjaxdataController@postdata')->name('ajaxdata.postdata');
+
+Route::get('ajaxdata/fetchdata', 'AjaxdataController@fetchdata')->name('ajaxdata.fetchdata');
+Route::get('ajaxdata/removedata', 'AjaxdataController@removedata')->name('ajaxdata.removedata');
+Route::get('ajaxdata/massremove', 'AjaxdataController@massremove')->name('ajaxdata.massremove');
