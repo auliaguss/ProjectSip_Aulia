@@ -2,23 +2,50 @@
 
 
 @section('content')
-    <div class="row">
-        <div class="col-lg-12 margin-tb">
-            <div class="pull-left">
-                <h2> Show Crime</h2>
-            </div>
-            <div class="pull-right">
-                <a class="btn btn-primary" href="{{ route('crimes.index') }}"> Back</a>
-            </div>
-        </div>
-    </div>
 
+<div class="mx-auto" style="width: 300px;">
+                <h2>{{ $crime->case_name }}</h2>
+</div>
+
+    <div class="mx-auto" style="width: 200px;">
+        <img src="{{ asset($crime->photo)}}" class="foto mx-auto" width="120px"/>
+    </div>
 
     <div class="row">
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="form-group">
-                <strong>Name:</strong>
-                {{ $crime->name }}
+                <strong>Start Date:</strong>
+                {{ $crime->start_date }}
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="form-group">
+                <strong>Status:</strong>
+                {{ $crime->status }}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="form-group">
+                <strong>Police ID:</strong>
+                {{ $crime->user_id }}
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="form-group">
+                <strong>Police Name:</strong>
+                {{ $user->name }}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="form-group">
+                <strong>Location:</strong>
+                {{ $crime->location }}
             </div>
         </div>
         <div class="col-xs-12 col-sm-12 col-md-12">
@@ -29,4 +56,3 @@
         </div>
     </div>
 @endsection
-<p class="text-center text-primary"><small>Tutorial by ItSolutionStuff.com</small></p>

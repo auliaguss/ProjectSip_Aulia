@@ -32,7 +32,6 @@ class UsersTableSeeder extends Seeder
                 'created_at'      => \Carbon\Carbon::now('Asia/Jakarta')
             ],
         );
-
         $user->assignRole([$role->id]);
         $user = User::create(
             [

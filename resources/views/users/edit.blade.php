@@ -36,6 +36,12 @@
     </div>
     <div class="col-xs-12 col-sm-12 col-md-12">
         <div class="form-group">
+            <strong>Username:</strong>
+            {!! Form::text('username', null, array('placeholder' => 'Username','class' => 'form-control')) !!}
+        </div>
+    </div>
+    <div class="col-xs-12 col-sm-12 col-md-12">
+        <div class="form-group">
             <strong>Email:</strong>
             {!! Form::text('email', null, array('placeholder' => 'Email','class' => 'form-control')) !!}
         </div>
@@ -55,7 +61,13 @@
     <div class="col-xs-12 col-sm-12 col-md-12">
         <div class="form-group">
             <strong>Role:</strong>
-            {!! Form::select('roles[]', $roles,$userRole, array('class' => 'form-control','multiple')) !!}
+            
+		    <select class="form-control @error('role_id') is-invalid @enderror" name="role_id" >
+                @foreach($roles as $roles)
+                  <option value="{{$roles->id}}" {{ $user->role_id =="$roles->id"?'selected':""}}>{{$roles->id}} - {{$roles->name}}</option>
+                @endforeach
+            </select>
+            {{--  {!! Form::select('roles[]', $roles,[], array('class' => 'form-control','multiple')) !!}  --}}
         </div>
     </div>
     <div class="col-xs-12 col-sm-12 col-md-12 text-center">

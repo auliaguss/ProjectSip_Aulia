@@ -4,7 +4,16 @@ namespace App\Http\Controllers;
 
 use \Illuminate\Support\Facades\DB;
 use App\Crime;
+use App\User;
 use Illuminate\Http\Request;
+use App\Exceptions\Handler;
+
+use App\Exports\CrimeExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Http\Controllers\Controller;
+
+
+use App\Imports\CrimeImport;
 
 class CrimeController extends Controller
 {
@@ -12,12 +21,25 @@ class CrimeController extends Controller
     function __construct()
     {
         // if (auth()->id() == 30) {
-        $this->middleware('permission:crime-create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:crime-create', ['only' => ['create', 'store', 'index']]);
         $this->middleware('permission:crime-edit', ['only' => ['edit', 'update']]);
         $this->middleware('permission:crime-delete', ['only' => ['destroy']]);
         // }
     }
 
+    public function destroy($id)
+    {
+        $ur = DB::table("crimes")->delete($id);
+        return response()->json(['success' => "crime Deleted successfully.", 'tr' => 'tr_' . $id]);
+    }
+
+
+    public function deleteAll(Request $request)
+    {
+        $ids = $request->ids;
+        $ur = DB::table("crimes")->whereIn('id', explode(",", $ids))->delete();
+        return response()->json(['success' => "crimes Deleted successfully."]);
+    }
     public function index()
     {
         $crimes = Crime::latest()->paginate(5);
@@ -25,23 +47,46 @@ class CrimeController extends Controller
             ->with('i', (request()->input('page', 1) - 1) * 5);
     }
 
+    public function indexUser($id)
+    {
+        // $user = DB::table('users')->where('name', 'John')->first();
+        // $crimes = Crime::latest()->paginate(5);
+        $crimes = DB::table('crimes')->where('user_id', $id)->latest()->paginate(5);
+        return view('crimes.index', compact('crimes'))
+            ->with('i', (request()->input('page', 1) - 1) * 5);
+    }
+
     public function create()
     {
-        return view('crimes.create');
+        $usr = DB::table('users')->get();
+        return view('crimes.create', compact('usr'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'case_name' => 'required',
+            'location' => 'required',
+            'user_id' => 'required',
+            'start_date' => 'required',
+            'status' => 'required',
+            'detail' => 'required',
+            'photo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
+        $imageName = time() . '.' . $request->photo->extension();
+        $request->photo->move(public_path('images/upload'), $imageName);
+        $request->photo = $imageName;
 
-        $imageName = time() . '.' . $request->image->extension();
-        $request->image->move(public_path('images'), $imageName);
-
-        Crime::create($request->all());
+        $crm = new Crime;
+        $crm->case_name = $request->case_name;
+        $crm->photo = 'images/upload/' . $imageName;
+        $crm->location = $request->location;
+        $crm->user_id = $request->user_id;
+        $crm->start_date = $request->start_date;
+        $crm->status = $request->status;
+        $crm->detail = $request->detail;
+        $crm->save();
 
 
         return redirect()->route('crimes.index')
@@ -56,13 +101,17 @@ class CrimeController extends Controller
      */
     public function show(Crime $crime)
     {
-        return view('crimes.show', compact('crime'));
+        $user = User::find($crime->user_id);
+        return view('crimes.show', compact('crime', 'user'));
     }
-    public function search($jenis, $variabel)
+    public function filter($jenis)
     {
-        if ($jenis == "id") $data = Crime::find($variabel);
-        else $data = DB::table('crimes')->where($jenis, 'like', '%' . $variabel . '%')->get();
-        return $data;
+        // $crimes = Crime::latest()->paginate(5);
+
+        $crimes = DB::table('crimes')->where('status', $jenis)->latest()->paginate(5);
+        // return view('crimes.index', compact('crimes'));
+        return view('crimes.index', compact('crimes'))
+            ->with('i', (request()->input('page', 1) - 1) * 5);
     }
 
     /**
@@ -73,7 +122,8 @@ class CrimeController extends Controller
      */
     public function edit(Crime $crime)
     {
-        return view('crimes.edit', compact('crime'));
+        $usr = DB::table('users')->get();
+        return view('crimes.edit', compact('crime', 'usr'));
     }
 
     /**
@@ -85,61 +135,66 @@ class CrimeController extends Controller
      */
     public function update(Request $request, Crime $crime)
     {
-        request()->validate([
-            'name' => 'required',
+
+        $request->validate([
+            'case_name' => 'required',
+            'location' => 'required',
+            'user_id' => 'required',
+            'start_date' => 'required',
+            'status' => 'required',
             'detail' => 'required',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'photo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
+        $imageName = time() . '.' . $request->photo->extension();
+        $request->photo->move(public_path('images/upload'), $imageName);
+        $request->photo = $imageName;
 
-        // $request->validate([
-        // ]);
+        // $crm = new Crime;
+        // $crm->save();
 
-        $imageName = time() . '.' . $request->image->extension();
-        $request->image->move(public_path('images'), $imageName);
+        Crime::where('id', $crime->id)
+            ->update([
+                "case_name" => $request->case_name,
+                "photo" => 'images/upload/' . $imageName,
+                "location" => $request->location,
+                "user_id" => $request->user_id,
+                "start_date" => $request->start_date,
+                "status" => $request->status,
+                "detail" => $request->detail,
+            ]);
 
-        $crime->update($request->all());
 
 
         return redirect()->route('crimes.index')
             ->with('success', 'Crime updated successfully');
     }
-    // public function imageUploadPost(Request $request)
-    // {
-    //     $request->validate([
-    //         'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-    //     ]);
 
-    //     $imageName = time().'.'.$request->image->extension();  
 
-    //     $request->image->move(public_path('images'), $imageName);
-
-    //     return back()
-    //         ->with('success','You have successfully upload image.')
-    //         ->with('image',$imageName);
-
-    // }
-
-    public function delete($id)
+    public function export_excel(Request $req)
     {
-        $user = Crime::find($id);
-        $user->delete();
-
-        return "Data Berhasil Dihapus";
+        return Excel::download(new CrimeExport($req), 'crime.xlsx');
     }
+    public function import_excel(Request $request)
+    {
+        // validasi
+        $this->validate($request, [
+            'file' => 'required|mimes:csv,xls,xlsx'
+        ]);
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\crime  $crime
-     * @return \Illuminate\Http\Response
-     */
-    // public function destroy(crime $crime)
-    // {
-    //     $crime->delete();
+        // menangkap file excel
+        $file = $request->file('file');
 
+        // membuat nama file unik
+        $nama_file = rand() . $file->getClientOriginalName();
 
-    //     return redirect()->route('crimes.index')
-    //                     ->with('success','crime deleted successfully');
-    // }
+        // upload ke folder file_user di dalam folder public
+        $file->move('file_upload', $nama_file);
+
+        // import data
+        Excel::import(new CrimeImport, public_path('/file_upload/' . $nama_file));
+
+        // alihkan halaman kembali
+        return redirect('/crimes');
+    }
 }

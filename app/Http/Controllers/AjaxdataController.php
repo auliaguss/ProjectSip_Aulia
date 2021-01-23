@@ -9,11 +9,11 @@ use Datatables;
 
 class AjaxdataController extends Controller
 {
-    function index()
-    {
-        return view('student.ajaxdata');
-        //http://127.0.0:8000/ajaxdata
-    }
+    // function index()
+    // {
+    //     return view('student.ajaxdata');
+    //     //http://127.0.0:8000/ajaxdata
+    // }
 
     function getdata()
     {
